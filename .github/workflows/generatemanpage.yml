@@ -1,0 +1,33 @@
+name: Generate manpage
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          set -ex
+          sudo apt install -y pandoc
+
+      - name: Generate manpage
+        run: |
+          set -ex
+          for d in /opt/ghc/*/bin; do PATH="$d:$PATH"; break; done
+          make -B -C man
+
+      - name: Commit/push if changed
+        run: |
+          set -ex
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --quiet --exit-code && exit
+          git commit -a -m 'man: Update'
+          git push
